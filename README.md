@@ -1,103 +1,113 @@
-# baseline-cli
+<p align="center">
+  <img src="logo.png" alt="Logo" width="100" height="100">
+  <h1 align="center">baseline-cli</h1>
+  <p align="center">A macOS CLI tool allows you to create visual baselines of web pages and compare them for visual regression testing</p>
+</p>
 
-## Baseline Creation and Comparison
+## 💻 Getting Started
 
-This CLI tool allows you to create visual baselines of web pages and compare them for visual regression testing.
+### Prerequisites
+- Python 3.8+
+- Make sure ChromeDriver or the appropriate WebDriver is available
+- Edit `config/config.py` to set default URLs, directories, and thresholds
 
----
+### Steps
 
-## Setting Up a Python Virtual Environment
+1. Create and activate the virtual environment
+    ```
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-It is recommended to use a Python virtual environment to manage dependencies and avoid conflicts with system packages.
+2. Install dependencies  
+    ```
+    pip install -r requirements.txt
+    ```
+    
+> [!TIP]  
+> Deactivate the virtual environment when done:
+> ```
+> deactivate
+> ```
 
-### 1. Create and Activate the Virtual Environment (macOS)
-```
-python3 -m venv venv
-source venv/bin/activate
-```
+## Features
 
-### 2. Install Dependencies
-```
-pip install -r requirements.txt
-```
+### Capture a Baseline
 
-### 3. Deactivate the Virtual Environment When Done
-```
-deactivate
-```
+Execute the following to capture a full-page screenshot and save it as a baseline image:
 
----
-
-## 1. Creating a Baseline
-
-To create a baseline screenshot or element template, use the script:
- 
-```
-python scripts/capture.py --url <URL> --page --name <baseline_name>
-```
-- This will save a full-page screenshot as a baseline.
-
-To capture a specific element as a template:
-```
-python scripts/capture.py --url <URL> --element --name <template_name> --selector '<CSS_SELECTOR>'
+```sh
+python scripts/capture.py --url <URL> --name <name> --page
 ```
 
-**Arguments:**
-- `--url`: The URL of the page to capture (default is set in config.py)
-- `--page`: Capture a full-page screenshot
-- `--element`: Capture a specific element
-- `--name`: Name for the baseline/template image
-- `--selector`: CSS selector for the element (required for --element)
-
----
-
-## 2. Comparing a Screenshot to a Baseline
-
-To compare the current state of a website to a baseline image, use:
-
-```
-python scripts/compare.py --url <URL> --name <name>
-```
-- This will navigate to the URL, take a screenshot, and compare it to the baseline image (e.g., `baseline_name_baseline.png` in your baseline directory, where `baseline_name` matches the name you used during capture).
-- The script will print the similarity score and output a diff image if differences are found.
-
-**Arguments:**
-- `--url`: The URL of the page to test
-- `--name`: The name of the baseline image to compare against (should match the name used during capture, without extension)
+> [!IMPORTANT]  
+> Arguments:  
+> `--url`: The URL of the page to capture (default is set in config.py)  
+> `--name`: Name for the baseline image  
+> `--page`: Capture a full-page screenshot  
 
 **Example:**
+
+```sh
+$ python scripts/capture.py --url http://localhost:3000/ --name login --page
+
+Visited URL
+Screenshot captured
+Results compiled
+
+╭─ Baseline Capture Summary ─╮
+│  Result    Success         │
+│  Duration  3.42 seconds    │
+╰────────────────────────────╯
 ```
-python scripts/compare.py --url https://your-website.com --name homepage
+
+### Compare against a Baseline
+
+Execute the following to compare the current state of a website to a baseline image:
+
+```sh
+python scripts/compare.py --url <URL> --name <name>
 ```
 
----
+> [!IMPORTANT]  
+> Arguments:  
+> `--url`: The URL of the page to test  
+> `--name`: The name of the baseline image to compare against  
 
-## Requirements
-- Python 3.8+
-- See `requirements.txt` for dependencies (selenium, pillow, opencv-python, scikit-image, webdriver-manager, etc.)
+**Example:**
 
----
+```sh
+$ python scripts/compare.py --url http://localhost:3000/ --name login  
 
-## Dependency Overview
+Visited URL
+Screenshot captured
+Screenshots compared
+Results compiled
+
+╭── Baseline Comparison Summary ───╮
+│  Result            Success       │
+│  Duration          2.01 seconds  │
+│  Similarity Score  100.00%       │
+╰──────────────────────────────────╯
+```
+
+## 🤝 Contributing
+
+Coming soon...
+
+### Dependency Overview
 
 | Package           | Role in CLI                                                                                  |
 |-------------------|---------------------------------------------------------------------------------------------|
-| selenium          | Browser automation for screenshot capture and web interaction                                |
-| webdriver-manager | Manages browser drivers for Selenium                                                        |
-| opencv-python     | Image processing and comparison                                                             |
 | numpy             | Numerical operations, used by image processing libraries                                    |
+| opencv-python     | Image processing and comparison                                                             |
 | Pillow            | Image manipulation (cropping, saving, etc.)                                                 |
+| rich              | Beautiful CLI formatting, colored output, status spinners, and tables for user feedback     |
 | scikit-image      | Advanced image processing and comparison (e.g., SSIM)                                       |
+| selenium          | Browser automation for screenshot capture and web interaction                                |
 | urllib3           | HTTP client, required as a dependency for Selenium/webdriver-manager                        |
+| webdriver-manager | Manages browser drivers for Selenium                                                        |
 
----
+## 📄 License
 
-## Configuration
-- Edit `config/config.py` to set default URLs, directories, and thresholds as needed.
-
----
-
-## Notes
-- Make sure ChromeDriver or the appropriate WebDriver is available (the scripts use `webdriver-manager` to auto-install drivers).
-- Baseline images are stored in the directory specified in `config.py` (e.g., `BASELINE_DIR`).
-- Diff images and results are stored in their respective directories as configured.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
