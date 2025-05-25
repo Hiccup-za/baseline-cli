@@ -8,6 +8,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 # Add project root to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +24,8 @@ from config.config import (
     SIMILARITY_THRESHOLD,
     HEADLESS
 )
+
+console = Console()
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run visual comparison test')
@@ -57,40 +62,49 @@ def run_website_test(url, baseline_name):
         driver = webdriver.Chrome(service=service, options=options)
         driver.set_page_load_timeout(30)
         try:
-            print(f"🧭 Visiting {url}...")
-            driver.get(url)
-            wait_for_page_load_complete(driver)
-            # Always write current screenshot to RESULTS_DIR/current.png
-            current_path = take_screenshot(driver, "current.png", folder=RESULTS_DIR)
-            baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
-            diff_path = os.path.join(DIFF_DIR, "diff.png")
-            print("🖼️  Comparing screenshots...")
-            similarity_score, _ = compare_images(
-                current_path,
-                baseline_path,
-                output_path=diff_path
-            )
-            print("🛠️  Compiling results...")
-            duration = time.time() - start_time
-            result = "✅ Pass" if similarity_score >= SIMILARITY_THRESHOLD else "❌ Failed"
+            console.print()
+            with console.status(f"Visiting {url}", spinner="dots", spinner_style="white"):
+                driver.get(url)
+                wait_for_page_load_complete(driver)
+            console.print("Visited URL")
+            with console.status("Capturing screenshot", spinner="dots", spinner_style="white"):
+                current_path = take_screenshot(driver, "current.png", folder=RESULTS_DIR)
+            console.print("Screenshot captured")
+            with console.status("Comparing screenshots", spinner="dots", spinner_style="white"):
+                baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
+                diff_path = os.path.join(DIFF_DIR, "diff.png")
+                similarity_score, _ = compare_images(
+                    current_path,
+                    baseline_path,
+                    output_path=diff_path
+                )
+            console.print("Screenshots compared")
+            with console.status("Compiling results", spinner="dots", spinner_style="white"):
+                duration = time.time() - start_time
+            console.print("Results compiled")
+            result = "Success" if similarity_score >= SIMILARITY_THRESHOLD else "Failed"
             return result, similarity_score, duration
         finally:
             driver.quit()
     except KeyboardInterrupt:
         duration = time.time() - start_time
-        print("\nComparison cancelled by user.")
-        return "🚫 Cancelled", None, duration
+        console.print("\n[bold yellow]Comparison cancelled by user.")
+        return "Cancelled", None, duration
     except Exception as e:
         duration = time.time() - start_time
-        print(f"🚨 Error testing website: {str(e)}")
-        return "🚨 Error", None, duration
+        console.print(f"[bold red]Error testing website: {str(e)}")
+        return "Error", None, duration
+
+def main():
+    args = parse_args()
+    result, similarity_score, duration = run_website_test(args.url, args.name)
+    table = Table(show_header=False, box=None)
+    table.add_row("Result", result)
+    table.add_row("Duration", f"{duration:.2f} seconds")
+    if similarity_score is not None:
+        table.add_row("Similarity Score", f"{similarity_score * 100:.2f}%")
+    console.print()
+    console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
 
 if __name__ == "__main__":
-    args = parse_args()
-    print("\n--- Baseline Visual Comparison ---\n")
-    result, similarity_score, duration = run_website_test(args.url, args.name)
-    print("\n--- Comparison Result ---\n")
-    print(f"🚦 Result: {result}")
-    if similarity_score is not None:
-        print(f"📊 Similarity Score: {similarity_score * 100:.2f}%")
-    print(f"⏱️  Duration: {duration:.2f} seconds") 
+    main() 
