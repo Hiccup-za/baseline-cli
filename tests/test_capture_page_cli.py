@@ -13,6 +13,20 @@ def run_cli(args):
     )
     return result
 
+def test_capture_page_success():
+    result = run_cli(['--url', 'http://localhost:3000/', '--page', '--name', 'login'])
+    output = result.stdout
+    
+    # Assert key steps in the process
+    assert "Visited URL" in output
+    assert "Screenshot captured" in output
+    assert "Results compiled" in output
+
+    # Assert summary and result
+    assert "Baseline Capture Summary" in output
+    assert "Result" in output and "Success" in output
+    assert "Duration" in output and "seconds" in output
+
 def test_name_not_provided_error():
     result = run_cli(['--url', 'http://localhost:3000/', '--page', '--name'])
     assert "Baseline name not provided" in result.stdout

@@ -131,15 +131,15 @@ def capture_element_template(url, element_selector, name, selector_type=By.CSS_S
 def main():
     """Run the baseline capture tool."""
     parser = argparse.ArgumentParser(description="Capture baseline screenshots and templates")
-    parser.add_argument("--url", type=str, default=TARGET_URL, help="URL to navigate to")
+    parser.add_argument("--url", type=str, nargs='?', help="URL to navigate to")
     parser.add_argument("--page", action="store_true", help="Capture full page screenshot")
     parser.add_argument("--element", action="store_true", help="Capture element template")
     parser.add_argument("--name", type=str, nargs='?', help="Name for the baseline/template")
-    parser.add_argument("--selector", type=str, help="CSS selector for the element (required for --element)")
+    parser.add_argument("--selector", type=str, nargs='?', help="CSS selector for the element (required for --element)")
     args = parser.parse_args()
     os.makedirs(BASELINE_DIR, exist_ok=True)
 
-    # Custom error handling for --name
+    # Custom error handling for --name and --url
     result = "Failed"
     duration = 0.00
     if '--name' in sys.argv and args.name is None:
@@ -162,13 +162,53 @@ def main():
         console.print()
         console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
         sys.exit(1)
+    if '--url' in sys.argv and (args.url is None or args.url.startswith('--')):
+        error_message = "URL not provided"
+        console.print()
+        console.print(f"[bold red]{error_message}")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", result)
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        sys.exit(1)
+    if '--url' not in sys.argv:
+        error_message = "The --url arg was not provided"
+        console.print()
+        console.print(f"[bold red]{error_message}")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", result)
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        sys.exit(1)
 
     if args.page and args.element:
         console.print("[bold red]Please choose either --page or --element, not both.")
         sys.exit(1)
-    if args.element and not args.selector:
-        console.print("[bold red]--selector is required when using --element")
-        sys.exit(1)
+    if args.element:
+        if '--selector' not in sys.argv:
+            result = "Failed"
+            duration = 0.00
+            console.print()
+            console.print("[bold red]The --selector arg was not provided")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", result)
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            sys.exit(1)
+        if args.selector is None or args.selector == 'selector':
+            result = "Failed"
+            duration = 0.00
+            console.print()
+            console.print("[bold red]No element selector provided")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", result)
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            sys.exit(1)
     driver = create_driver(headless=HEADLESS)
     try:
         if args.page:
@@ -176,7 +216,16 @@ def main():
         elif args.element:
             result, output_path, duration = capture_element_template(args.url, args.selector, args.name, driver=driver, should_quit=False)
         else:
-            console.print("[bold red]Please specify either --page or --element")
+            # Consistent error output for missing --page/--element
+            result = "Failed"
+            duration = 0.00
+            console.print()
+            console.print("[bold red]The --page or --element arg was not provided")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", result)
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
             sys.exit(1)
     finally:
         driver.quit()

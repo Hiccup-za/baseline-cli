@@ -13,6 +13,20 @@ def run_cli(args):
     )
     return result
 
+def test_capture_page_success():
+    result = run_cli(['--url', 'http://localhost:3000/', '--name', 'login', '--element', '--selector', 'img'])
+    output = result.stdout
+    
+    # Assert key steps in the process
+    assert "Visited URL" in output
+    assert "Element screenshot captured" in output
+    assert "Results compiled" in output
+
+    # Assert summary and result
+    assert "Baseline Capture Summary" in output
+    assert "Result" in output and "Success" in output
+    assert "Duration" in output and "seconds" in output
+
 def test_name_not_provided_error():
     result = run_cli(['--url', 'http://localhost:3000/', '--element', '--name'])
     assert "Baseline name not provided" in result.stdout
@@ -36,6 +50,18 @@ def test_url_not_provided_error():
 def test_url_arg_not_provided_error():
     result = run_cli(['--element', '--name', 'login'])
     assert "The --url arg was not provided" in result.stdout
+    assert "Result" in result.stdout and "Failed" in result.stdout 
+    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
+
+def test_element_selector_not_provided_error():
+    result = run_cli(['--url', 'http://localhost:3000/', '--name', 'login', '--element', '--selector'])
+    assert "No element selector provided" in result.stdout
+    assert "Result" in result.stdout and "Failed" in result.stdout 
+    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
+
+def test_element_selector_arg_not_provided_error():
+    result = run_cli(['--url', 'http://localhost:3000/', '--name', 'login', '--element'])
+    assert "The --selector arg was not provided" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout 
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
