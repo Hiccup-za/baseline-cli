@@ -30,7 +30,7 @@
 > deactivate
 > ```
 
-## Features
+## ✨ Features
 
 ### Capture a Baseline
 
@@ -90,6 +90,22 @@ Results compiled
 │  Similarity Score  100.00%       │
 ╰──────────────────────────────────╯
 ```
+
+## 🧪 Tests
+
+Automated tests are provided in the `tests/` directory, which cover the main CLI functionality:  
+- Baseline capture (full page and element)
+- Baseline comparison
+- CLI argument validation and error handling
+
+To run all tests, activate your virtual environment and run:
+
+```sh
+pytest tests/
+```
+
+> [!TIP]  
+> You can also run individual test files
 
 ## 🤝 Contributing
 
