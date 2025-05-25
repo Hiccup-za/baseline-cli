@@ -29,8 +29,8 @@ console = Console()
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run visual comparison test')
-    parser.add_argument('--url', type=str, required=True, help='URL to test')
-    parser.add_argument('--name', type=str, required=True, help='Name of the baseline image (without extension)')
+    parser.add_argument('--url', type=str, nargs='?', default=None, help='URL to test')
+    parser.add_argument('--name', type=str, nargs='?', default=None, help='Name of the baseline image (without extension)')
     return parser.parse_args()
 
 def run_website_test(url, baseline_name):
@@ -44,6 +44,12 @@ def run_website_test(url, baseline_name):
         tuple: (result, similarity_score, duration)
     """
     start_time = time.time()
+    baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
+    if not os.path.exists(baseline_path):
+        duration = time.time() - start_time
+        error_msg = f"Image not found"
+        console.print(f"\n[bold red]{error_msg}")
+        return "Failed", None, duration
     try:
         # Ensure the results and diff directories exist
         os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -92,11 +98,73 @@ def run_website_test(url, baseline_name):
         return "Cancelled", None, duration
     except Exception as e:
         duration = time.time() - start_time
-        console.print(f"[bold red]Error testing website: {str(e)}")
+        console.print(f"\n[bold red]Error testing website: {str(e)}")
         return "Error", None, duration
 
 def main():
     args = parse_args()
+    # Check for --url provided but no value
+    if '--url' in sys.argv:
+        url_index = sys.argv.index('--url')
+        # If --url is last or next value is another flag or missing
+        if url_index == len(sys.argv) - 1 or (url_index + 1 < len(sys.argv) and sys.argv[url_index + 1].startswith('--')):
+            error_msg = "URL not provided"
+            duration = 0.0
+            console.print(f"\n[bold red]{error_msg}")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", "Failed")
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            return
+
+    # If neither --url nor --name are provided, show both errors
+    if not args.url and not args.name:
+        duration = 0.0
+        console.print(f"\n[bold red]The --url arg was not provided")
+        console.print(f"[bold red]The --name arg was not provided")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", "Failed")
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        return
+
+    if not args.url:
+        error_msg = "The --url arg was not provided"
+        duration = 0.0
+        console.print(f"\n[bold red]{error_msg}")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", "Failed")
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        return
+    # Check for --name provided but no value
+    if '--name' in sys.argv:
+        name_index = sys.argv.index('--name')
+        # If --name is last or next value is another flag or missing
+        if name_index == len(sys.argv) - 1 or (name_index + 1 < len(sys.argv) and sys.argv[name_index + 1].startswith('--')):
+            error_msg = "Image name not provided"
+            duration = 0.0
+            console.print(f"\n[bold red]{error_msg}")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", "Failed")
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            return
+
+    if not args.name:
+        error_msg = "The --name arg was not provided"
+        duration = 0.0
+        console.print(f"\n[bold red]{error_msg}")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", "Failed")
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        return
     result, similarity_score, duration = run_website_test(args.url, args.name)
     table = Table(show_header=False, box=None)
     table.add_row("Result", result)

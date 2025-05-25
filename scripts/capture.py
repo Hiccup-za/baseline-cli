@@ -134,10 +134,35 @@ def main():
     parser.add_argument("--url", type=str, default=TARGET_URL, help="URL to navigate to")
     parser.add_argument("--page", action="store_true", help="Capture full page screenshot")
     parser.add_argument("--element", action="store_true", help="Capture element template")
-    parser.add_argument("--name", type=str, required=True, help="Name for the baseline/template")
+    parser.add_argument("--name", type=str, nargs='?', help="Name for the baseline/template")
     parser.add_argument("--selector", type=str, help="CSS selector for the element (required for --element)")
     args = parser.parse_args()
     os.makedirs(BASELINE_DIR, exist_ok=True)
+
+    # Custom error handling for --name
+    result = "Failed"
+    duration = 0.00
+    if '--name' in sys.argv and args.name is None:
+        error_message = "Baseline name not provided"
+        console.print()
+        console.print(f"[bold red]{error_message}")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", result)
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        sys.exit(1)
+    if '--name' not in sys.argv:
+        error_message = "The --name arg was not provided"
+        console.print()
+        console.print(f"[bold red]{error_message}")
+        table = Table(show_header=False, box=None)
+        table.add_row("Result", result)
+        table.add_row("Duration", f"{duration:.2f} seconds")
+        console.print()
+        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        sys.exit(1)
+
     if args.page and args.element:
         console.print("[bold red]Please choose either --page or --element, not both.")
         sys.exit(1)

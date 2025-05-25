@@ -1,7 +1,5 @@
 # baseline-cli
 
-**Note: This CLI only supports macOS.**
-
 ## Baseline Creation and Comparison
 
 This CLI tool allows you to create visual baselines of web pages and compare them for visual regression testing.
