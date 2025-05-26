@@ -5,6 +5,7 @@ import pytest
 import re
 
 SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'scripts', 'compare.py')
+TEST_URL = 'https://baseline-website.vercel.app/'
 
 def run_cli(args):
     result = subprocess.run(
@@ -20,7 +21,7 @@ def test_baseline_success():
     baseline_path = os.path.join(BASELINE_DIR, "login_baseline.png")
     if not os.path.exists(baseline_path):
         pytest.skip("Baseline image does not exist.")
-    result = run_cli(['--url', 'http://localhost:3000/', '--name', 'login'])
+    result = run_cli(['--url', TEST_URL, '--name', 'login'])
     output = result.stdout
 
     # Assert key steps in the process
@@ -36,19 +37,19 @@ def test_baseline_success():
     assert "Similarity Score" in output and "100.00%" in output
 
 def test_baseline_image_not_found():
-    result = run_cli(['--url', 'http://localhost:3000/', '--name', 'nonexistent'])
+    result = run_cli(['--url', TEST_URL, '--name', 'nonexistent'])
     assert "Image not found" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout 
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
 def test_baseline_image_not_provided():
-    result = run_cli(['--url', 'http://localhost:3000/', '--name'])
+    result = run_cli(['--url', TEST_URL, '--name'])
     assert "Image name not provided" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout 
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
 def test_baseline_image_arg_not_provided():
-    result = run_cli(['--url', 'http://localhost:3000/'])
+    result = run_cli(['--url', TEST_URL])
     assert "The --name arg was not provided" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout 
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 

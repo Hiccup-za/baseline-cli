@@ -4,6 +4,7 @@ import os
 import pytest
 
 SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'scripts', 'capture.py')
+TEST_URL = 'https://baseline-website.vercel.app/'
 
 def run_cli(args):
     result = subprocess.run(
@@ -14,7 +15,7 @@ def run_cli(args):
     return result
 
 def test_capture_page_success():
-    result = run_cli(['--url', 'http://localhost:3000/', '--page', '--name', 'login'])
+    result = run_cli(['--url', TEST_URL, '--page', '--name', 'login'])
     output = result.stdout
     
     # Assert key steps in the process
@@ -28,14 +29,14 @@ def test_capture_page_success():
     assert "Duration" in output and "seconds" in output
 
 def test_name_not_provided_error():
-    result = run_cli(['--url', 'http://localhost:3000/', '--page', '--name'])
+    result = run_cli(['--url', TEST_URL, '--page', '--name'])
     assert "Baseline name not provided" in result.stdout
     assert "Baseline Comparison Summary" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
 def test_name_arg_not_provided_error():
-    result = run_cli(['--url', 'http://localhost:3000/', '--page'])
+    result = run_cli(['--url', TEST_URL, '--page'])
     assert "The --name arg was not provided" in result.stdout
     assert "Baseline Comparison Summary" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout
@@ -54,7 +55,7 @@ def test_url_arg_not_provided_error():
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
 def test_type_arg_not_provided_error():
-    result = run_cli(['--url', 'http://localhost:3000/', '--name', 'login'])
+    result = run_cli(['--url', TEST_URL, '--name', 'login'])    
     assert "The --page or --element arg was not provided" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout 
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
