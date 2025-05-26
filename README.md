@@ -4,6 +4,8 @@
   <p align="center">A macOS CLI tool allows you to create visual baselines of web pages and compare them for visual regression testing</p>
 </p>
 
+[![Regression](https://github.com/Hiccup-za/baseline-cli/actions/workflows/regression.yml/badge.svg)](https://github.com/Hiccup-za/baseline-cli/actions/workflows/regression.yml)
+
 ## 💻 Getting Started
 
 ### Prerequisites
