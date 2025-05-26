@@ -2,10 +2,9 @@ import subprocess
 import sys
 import os
 import pytest
-import re
+from tests.fixtures import TEST_URL
 
 SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'scripts', 'compare.py')
-TEST_URL = 'https://baseline-website.vercel.app/'
 
 def run_cli(args):
     result = subprocess.run(
