@@ -1,7 +1,7 @@
 <p align="center">
   <img src="assets/logo.png" alt="Logo" width="100" height="100">
   <h1 align="center">baseline-cli</h1>
-  <p align="center">A macOS CLI tool allows you to create visual baselines of web pages and compare them for visual regression testing</p>
+  <p align="center">A macOS CLI tool allows you to create visual baselines of web pages and elements & compare them for visual regression testing</p>
 </p>
 
 [![Regression](https://github.com/Hiccup-za/baseline-cli/actions/workflows/regression.yml/badge.svg)](https://github.com/Hiccup-za/baseline-cli/actions/workflows/regression.yml)
@@ -36,61 +36,69 @@
 
 ### Capture a Baseline
 
-Execute the following to capture a full-page screenshot and save it as a baseline image:
+You can capture a baseline of:
+- The full page
+- A specific element by CSS selector
+- A specific element by class name
+
+#### Full Page
 
 ```sh
 python scripts/capture.py --url <URL> --name <name> --page
 ```
 
-> [!IMPORTANT]  
-> Arguments:  
-> `--url`: The URL of the page to capture (default is set in config.py)  
-> `--name`: Name for the baseline image  
-> `--page`: Capture a full-page screenshot  
-
-**Example:**
+#### Element by CSS Selector
 
 ```sh
-$ python scripts/capture.py --url http://localhost:3000/ --name login --page
+python scripts/capture.py --url <URL> --name <name> --element --selector "<CSS_SELECTOR>"
+```
+- `--element`: Capture a screenshot of a specific element
+- `--selector`: CSS selector for the element
 
-Visited URL
-Screenshot captured
-Results compiled
+#### Element by Class Name
 
-╭─ Baseline Capture Summary ─╮
-│  Result    Success         │
-│  Duration  3.42 seconds    │
-╰────────────────────────────╯
+```sh
+python scripts/capture.py --url <URL> --name <name> --element --class "<CLASS_NAME>"
+```
+- `--class`: Class name for the element
+
+**Examples:**
+
+```sh
+python scripts/capture.py --url http://localhost:3000/ --name button --element --selector "button"
+python scripts/capture.py --url http://localhost:3000/ --name text-box --element --class "text-box"
 ```
 
 ### Compare against a Baseline
 
-Execute the following to compare the current state of a website to a baseline image:
+You can compare:
+- The full page
+- A specific element by CSS selector
+- A specific element by class name
+
+#### Full Page
 
 ```sh
-python scripts/compare.py --url <URL> --name <name>
+python scripts/compare.py --url <URL> --name <name> --page
 ```
 
-> [!IMPORTANT]  
-> Arguments:  
-> `--url`: The URL of the page to test  
-> `--name`: The name of the baseline image to compare against  
-
-**Example:**
+#### Element by CSS Selector
 
 ```sh
-$ python scripts/compare.py --url http://localhost:3000/ --name login  
+python scripts/compare.py --url <URL> --name <name> --element --selector "<CSS_SELECTOR>"
+```
 
-Visited URL
-Screenshot captured
-Screenshots compared
-Results compiled
+#### Element by Class Name
 
-╭── Baseline Comparison Summary ───╮
-│  Result            Success       │
-│  Duration          2.01 seconds  │
-│  Similarity Score  100.00%       │
-╰──────────────────────────────────╯
+```sh
+python scripts/compare.py --url <URL> --name <name> --element --class "<CLASS_NAME>"
+```
+
+**Examples:**
+
+```sh
+python scripts/compare.py --url http://localhost:3000/ --name button --element --selector "button"
+python scripts/compare.py --url http://localhost:3000/ --name text-box --element --class "text-box"
 ```
 
 ## 🧪 Tests
@@ -105,9 +113,6 @@ To run all tests, activate your virtual environment and run:
 ```sh
 pytest tests/
 ```
-
-> [!TIP]  
-> You can also run individual test files
 
 ## 🤝 Contributing
 
