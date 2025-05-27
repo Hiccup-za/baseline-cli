@@ -32,4 +32,4 @@ for directory in [SCREENSHOT_DIR, BASELINE_DIR, RESULTS_DIR, DIFF_DIR]:
 
 
 # Web app settings
-TARGET_URL = "http://localhost:3000/"
+TARGET_URL = "https://baseline-cli.vercel.app/"
