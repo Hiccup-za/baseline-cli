@@ -106,7 +106,7 @@ def capture_element_template(url, element_selector, name, selector_type=By.CSS_S
                 right *= device_pixel_ratio
                 bottom *= device_pixel_ratio
             elem_img = full_img.crop((left, top, right, bottom))
-            template_path = os.path.join(BASELINE_DIR, f"{name}_template.png")
+            template_path = os.path.join(BASELINE_DIR, f"{name}_element.png")
             elem_img.save(template_path)
             os.remove(temp_screenshot)
             output_path = template_path
@@ -135,7 +135,10 @@ def main():
     parser.add_argument("--page", action="store_true", help="Capture full page screenshot")
     parser.add_argument("--element", action="store_true", help="Capture element template")
     parser.add_argument("--name", type=str, nargs='?', help="Name for the baseline/template")
-    parser.add_argument("--selector", type=str, nargs='?', help="CSS selector for the element (required for --element)")
+    # Add mutually exclusive group for --class and --selector
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--class", dest="class_name", type=str, nargs='?', const='', help="Class name for the element (required for --element if not using --selector)")
+    group.add_argument("--selector", dest="css_selector", type=str, nargs='?', const='', help="Generic CSS selector for the element (required for --element if not using --class)")
     args = parser.parse_args()
     os.makedirs(BASELINE_DIR, exist_ok=True)
 
@@ -186,35 +189,49 @@ def main():
     if args.page and args.element:
         console.print("[bold red]Please choose either --page or --element, not both.")
         sys.exit(1)
-    if args.element:
-        if '--selector' not in sys.argv:
-            result = "Failed"
-            duration = 0.00
-            console.print()
-            console.print("[bold red]The --selector arg was not provided")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", result)
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            sys.exit(1)
-        if args.selector is None or args.selector == 'selector':
-            result = "Failed"
-            duration = 0.00
-            console.print()
-            console.print("[bold red]No element selector provided")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", result)
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            sys.exit(1)
     driver = create_driver(headless=HEADLESS)
     try:
         if args.page:
             result, output_path, duration = capture_full_page_baseline(args.url, args.name, driver, should_quit=False)
         elif args.element:
-            result, output_path, duration = capture_element_template(args.url, args.selector, args.name, driver=driver, should_quit=False)
+            # Support --class or --selector for element selection
+            if args.class_name == '':
+                result = "Failed"
+                duration = 0.00
+                console.print()
+                console.print("[bold red]Class not provided")
+                table = Table(show_header=False, box=None)
+                table.add_row("Result", result)
+                table.add_row("Duration", f"{duration:.2f} seconds")
+                console.print()
+                console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+                sys.exit(1)
+            if args.css_selector == '':
+                result = "Failed"
+                duration = 0.00
+                console.print()
+                console.print("[bold red]Selector not provided")
+                table = Table(show_header=False, box=None)
+                table.add_row("Result", result)
+                table.add_row("Duration", f"{duration:.2f} seconds")
+                console.print()
+                console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+                sys.exit(1)
+            if args.class_name is None and args.css_selector is None:
+                result = "Failed"
+                duration = 0.00
+                console.print()
+                console.print("[bold red]You must provide either --class or --selector for --element")
+                table = Table(show_header=False, box=None)
+                table.add_row("Result", result)
+                table.add_row("Duration", f"{duration:.2f} seconds")
+                console.print()
+                console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+                sys.exit(1)
+            if args.class_name:
+                result, output_path, duration = capture_element_template(args.url, args.class_name, args.name, selector_type=By.CLASS_NAME, driver=driver, should_quit=False)
+            elif args.css_selector:
+                result, output_path, duration = capture_element_template(args.url, args.css_selector, args.name, selector_type=By.CSS_SELECTOR, driver=driver, should_quit=False)
         else:
             # Consistent error output for missing --page/--element
             result = "Failed"
