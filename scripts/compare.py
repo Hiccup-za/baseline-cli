@@ -11,6 +11,8 @@ import time
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from PIL import Image
+from selenium.webdriver.common.by import By
 
 # Add project root to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,20 +33,30 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Run visual comparison test')
     parser.add_argument('--url', type=str, nargs='?', default=None, help='URL to test')
     parser.add_argument('--name', type=str, nargs='?', default=None, help='Name of the baseline image (without extension)')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--page', action='store_true', help='Compare full page screenshot (default)')
+    group.add_argument('--element', action='store_true', help='Compare element screenshot')
+    parser.add_argument('--class', dest='class_name', type=str, nargs='?', help='Class name for the element (used with --element)')
+    parser.add_argument('--selector', dest='css_selector', type=str, nargs='?', help='CSS selector for the element (used with --element)')
     return parser.parse_args()
 
-def run_website_test(url, baseline_name):
+def compare_website_visuals(url, baseline_name, compare_element=False, class_name=None, css_selector=None):
     """
-    Test a website by comparing its current state with a baseline.
-    
+    Test a website by comparing its current state with a baseline or element image.
     Args:
         url (str): URL of the website to test
         baseline_name (str): Name of the baseline image (without extension)
+        compare_element (bool): Whether to compare element image
+        class_name (str): Class name for the element (if used)
+        css_selector (str): CSS selector for the element (if used)
     Returns:
         tuple: (result, similarity_score, duration)
     """
     start_time = time.time()
-    baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
+    if compare_element:
+        baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_element.png")
+    else:
+        baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
     if not os.path.exists(baseline_path):
         duration = time.time() - start_time
         error_msg = f"Image not found"
@@ -74,10 +86,37 @@ def run_website_test(url, baseline_name):
                 wait_for_page_load_complete(driver)
             console.print("Visited URL")
             with console.status("Capturing screenshot", spinner="dots", spinner_style="white"):
-                current_path = take_screenshot(driver, "current.png", folder=RESULTS_DIR)
+                if compare_element:
+                    # Find the element
+                    if class_name:
+                        element = driver.find_element(By.CLASS_NAME, class_name)
+                    else:
+                        element = driver.find_element(By.CSS_SELECTOR, css_selector)
+                    driver.execute_script("arguments[0].scrollIntoView(true);", element)
+                    time.sleep(1)
+                    location = element.location
+                    size = element.size
+                    temp_screenshot = os.path.join(RESULTS_DIR, "temp_screenshot.png")
+                    driver.save_screenshot(temp_screenshot)
+                    full_img = Image.open(temp_screenshot)
+                    left = location['x']
+                    top = location['y']
+                    right = location['x'] + size['width']
+                    bottom = location['y'] + size['height']
+                    device_pixel_ratio = driver.execute_script("return window.devicePixelRatio;")
+                    if device_pixel_ratio and device_pixel_ratio > 1:
+                        left *= device_pixel_ratio
+                        top *= device_pixel_ratio
+                        right *= device_pixel_ratio
+                        bottom *= device_pixel_ratio
+                    elem_img = full_img.crop((left, top, right, bottom))
+                    current_path = os.path.join(RESULTS_DIR, "current.png")
+                    elem_img.save(current_path)
+                    os.remove(temp_screenshot)
+                else:
+                    current_path = take_screenshot(driver, "current.png", folder=RESULTS_DIR)
             console.print("Screenshot captured")
             with console.status("Comparing screenshots", spinner="dots", spinner_style="white"):
-                baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
                 diff_path = os.path.join(DIFF_DIR, "diff.png")
                 similarity_score, _ = compare_images(
                     current_path,
@@ -165,7 +204,39 @@ def main():
         console.print()
         console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
         return
-    result, similarity_score, duration = run_website_test(args.url, args.name)
+
+    # If --element is used, require --class or --selector
+    if args.element:
+        if not args.class_name and not args.css_selector:
+            duration = 0.0
+            console.print(f"\n[bold red]You must provide either --class or --selector for --element")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", "Failed")
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            return
+        if args.class_name == 'class':
+            duration = 0.0
+            console.print(f"\n[bold red]No class name provided")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", "Failed")
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            return
+        if args.css_selector == 'selector':
+            duration = 0.0
+            console.print(f"\n[bold red]No CSS selector provided")
+            table = Table(show_header=False, box=None)
+            table.add_row("Result", "Failed")
+            table.add_row("Duration", f"{duration:.2f} seconds")
+            console.print()
+            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+            return
+        result, similarity_score, duration = compare_website_visuals(args.url, args.name, compare_element=True, class_name=args.class_name, css_selector=args.css_selector)
+    else:
+        result, similarity_score, duration = compare_website_visuals(args.url, args.name, compare_element=False)
     table = Table(show_header=False, box=None)
     table.add_row("Result", result)
     table.add_row("Duration", f"{duration:.2f} seconds")
