@@ -1,5 +1,7 @@
 """
-Visual comparison CLI for baseline images.
+Script to compare screenshots against baseline images for visual regression testing.
+
+This tool captures new screenshots and compares them with existing baselines.
 """
 import os
 import sys
@@ -8,6 +10,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import cv2
+import numpy as np
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -17,15 +21,17 @@ from selenium.webdriver.common.by import By
 # Add project root to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.web_utils import take_screenshot, wait_for_page_load_complete
+from utils.web_utils import take_screenshot, wait_for_page_load_complete, create_driver
 from utils.image_utils import compare_images
 from config.config import (
     BASELINE_DIR, 
     RESULTS_DIR, 
     DIFF_DIR, 
     SIMILARITY_THRESHOLD,
-    HEADLESS
+    HEADLESS,
+    TARGET_URL
 )
+from __version__ import __version__, __title__, __description__
 
 console = Console()
 
@@ -38,6 +44,7 @@ def parse_args():
     group.add_argument('--element', action='store_true', help='Compare element screenshot')
     parser.add_argument('--class', dest='class_name', type=str, nargs='?', help='Class name for the element (used with --element)')
     parser.add_argument('--selector', dest='css_selector', type=str, nargs='?', help='CSS selector for the element (used with --element)')
+    parser.add_argument("--version", action="store_true", help="Show version information")
     return parser.parse_args()
 
 def compare_website_visuals(url, baseline_name, compare_element=False, class_name=None, css_selector=None):
@@ -142,6 +149,13 @@ def compare_website_visuals(url, baseline_name, compare_element=False, class_nam
 
 def main():
     args = parse_args()
+    
+    # Handle version request first, before any other validation
+    if args.version:
+        console.print(f"[bold green]{__title__}[/bold green] v{__version__}")
+        console.print(f"[dim]{__description__}[/dim]")
+        sys.exit(0)
+    
     # Check for --url provided but no value
     if '--url' in sys.argv:
         url_index = sys.argv.index('--url')
