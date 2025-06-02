@@ -1,0 +1,9 @@
+# Global rule: All files require review from the repository owner
+# This ensures that all PRs must be reviewed before merging
+* @Hiccup-za
+
+# You can add more specific rules below if needed
+# For example:
+# /docs/ @documentation-team
+# *.py @python-developers
+# /config/ @devops-team 
