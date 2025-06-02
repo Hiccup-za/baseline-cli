@@ -12,22 +12,22 @@ jobs:
       contents: write  # Required to create releases
     
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch full history for changelog
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Extract version from tag
+      - name: 🔍 Extract version from tag
         id: version
         run: |
           # Extract version from tag (remove 'v' prefix)
@@ -35,7 +35,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Verify version consistency
+      - name: ↔️ Verify version consistency
         run: |
           # Check if the tag version matches __version__.py
           PACKAGE_VERSION=$(python -c "from __version__ import __version__; print(__version__)")
@@ -51,7 +51,7 @@ jobs:
           
           echo "✅ Version consistency verified: $TAG_VERSION"
 
-      - name: Extract changelog for this version
+      - name: 📋 Extract changelog for this version
         id: changelog
         run: |
           # Extract the changelog section for this version
@@ -91,7 +91,7 @@ jobs:
               sys.exit(1)
           EOF
 
-      - name: Create Release
+      - name: 🚢 Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,13 +101,3 @@ jobs:
           body_path: current_changelog.md
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') || contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
-
-      - name: Upload Release Assets (Optional)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./requirements.txt
-          asset_name: requirements.txt
-          asset_content_type: text/plain 

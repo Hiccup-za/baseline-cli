@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2024-12-31
+## [0.2.1] - 2025-06-02
+
+### Improved
+- **Workflow Readability**: All release workflow steps now have meaningful emojis for easier scanning and understanding
+
+### Technical Details
+- Updated `.github/workflows/release.yml` to include emoji for changelog extraction step
+- Maintained consistent emoji usage across all workflow steps for professional appearance
+
+## [0.2.0] - 2025-06-02
 
 ### Added
 - **GitHub Releases Automation**: Complete automated release system with GitHub Actions workflow
@@ -41,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Examples and Use Cases**: Step-by-step examples for different types of releases
 - **Best Practices**: Guidelines for maintaining consistent release quality
 
-## [0.1.2] - 2024-12-30
+## [0.1.2] - 2025-06-02
 
 ### Added
 - New centralized error handling utilities in `utils/error_utils.py`
@@ -78,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Developer Experience**: Single function calls replace complex error handling blocks
 - **User Experience**: Uniform error message presentation throughout application
 
-## [0.1.1] - 2024-12-30
+## [0.1.1] - 2025-06-02
 
 ### Added
 - Added `.github/CODEOWNERS` file to require code review for all pull requests
@@ -87,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Enhanced repository security by enforcing mandatory code reviews
 
-## [0.1.0] - 2024-12-30
+## [0.1.0] - 2025-06-02
 
 ### Changed
 - **BREAKING**: Refactored to unified CLI architecture with subcommands
@@ -122,7 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preserved all original functionality while improving user experience
 - Enhanced test coverage for all edge cases and error conditions
 
-## [0.0.2] - 2024-12-30
+## [0.0.2] - 2025-06-02
 
 ### Changed
 - **BREAKING**: Refactored error handling in capture script for consistency
@@ -145,7 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured capture script uses "Baseline Capture Summary" while compare script uses "Baseline Comparison Summary"
 - All tests continue to pass with updated expectations
 
-## [0.0.1] - 2024-12-30
+## [0.0.1] - 2025-06-02
 
 ### Added
 - Initial release of baseline-cli
