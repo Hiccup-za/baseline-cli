@@ -3,7 +3,7 @@
 Main CLI entry point for baseline-cli.
 
 This is the unified command-line interface for visual regression testing.
-Run 'python baseline.py --help' for usage information.
+Run 'baseline --help' for usage information.
 """
 import os
 import sys
