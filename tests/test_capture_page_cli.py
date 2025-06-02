@@ -31,14 +31,14 @@ def test_capture_page_success():
 def test_name_not_provided_error():
     result = run_cli(['--url', TARGET_URL, '--page', '--name'])
     assert "Baseline name not provided" in result.stdout
-    assert "Baseline Comparison Summary" in result.stdout
+    assert "Baseline Capture Summary" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
 def test_name_arg_not_provided_error():
     result = run_cli(['--url', TARGET_URL, '--page'])
     assert "The --name arg was not provided" in result.stdout
-    assert "Baseline Comparison Summary" in result.stdout
+    assert "Baseline Capture Summary" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 

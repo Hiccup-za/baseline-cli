@@ -18,8 +18,28 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.web_utils import create_driver, take_screenshot
 from config.config import TARGET_URL, BASELINE_DIR, HEADLESS
+from __version__ import __version__, __title__, __description__
 
 console = Console()
+
+def handle_error(message, title="Baseline Capture Summary"):
+    """
+    Handle errors consistently with standardized output format.
+    
+    Args:
+        message (str): Error message to display
+        title (str): Title for the summary panel
+    """
+    result = "Failed"
+    duration = 0.00
+    console.print()
+    console.print(f"[bold red]{message}")
+    table = Table(show_header=False, box=None)
+    table.add_row("Result", result)
+    table.add_row("Duration", f"{duration:.2f} seconds")
+    console.print()
+    console.print(Panel(table, title=title, expand=False))
+    sys.exit(1)
 
 def capture_full_page_baseline(url, name, driver=None, should_quit=True):
     """
@@ -139,52 +159,26 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--class", dest="class_name", type=str, nargs='?', const='', help="Class name for the element (required for --element if not using --selector)")
     group.add_argument("--selector", dest="css_selector", type=str, nargs='?', const='', help="Generic CSS selector for the element (required for --element if not using --class)")
+    parser.add_argument("--version", action="store_true", help="Show version information")
     args = parser.parse_args()
+    
+    # Handle version request first, before any other validation
+    if args.version:
+        console.print(f"[bold green]{__title__}[/bold green] v{__version__}")
+        console.print(f"[dim]{__description__}[/dim]")
+        sys.exit(0)
+    
     os.makedirs(BASELINE_DIR, exist_ok=True)
 
     # Custom error handling for --name and --url
-    result = "Failed"
-    duration = 0.00
     if '--name' in sys.argv and args.name is None:
-        error_message = "Baseline name not provided"
-        console.print()
-        console.print(f"[bold red]{error_message}")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", result)
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        sys.exit(1)
+        handle_error("Baseline name not provided")
     if '--name' not in sys.argv:
-        error_message = "The --name arg was not provided"
-        console.print()
-        console.print(f"[bold red]{error_message}")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", result)
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        sys.exit(1)
+        handle_error("The --name arg was not provided")
     if '--url' in sys.argv and (args.url is None or args.url.startswith('--')):
-        error_message = "URL not provided"
-        console.print()
-        console.print(f"[bold red]{error_message}")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", result)
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        sys.exit(1)
+        handle_error("URL not provided")
     if '--url' not in sys.argv:
-        error_message = "The --url arg was not provided"
-        console.print()
-        console.print(f"[bold red]{error_message}")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", result)
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        sys.exit(1)
+        handle_error("The --url arg was not provided")
 
     if args.page and args.element:
         console.print("[bold red]Please choose either --page or --element, not both.")
@@ -196,54 +190,18 @@ def main():
         elif args.element:
             # Support --class or --selector for element selection
             if args.class_name == '':
-                result = "Failed"
-                duration = 0.00
-                console.print()
-                console.print("[bold red]Class not provided")
-                table = Table(show_header=False, box=None)
-                table.add_row("Result", result)
-                table.add_row("Duration", f"{duration:.2f} seconds")
-                console.print()
-                console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-                sys.exit(1)
+                handle_error("Class not provided")
             if args.css_selector == '':
-                result = "Failed"
-                duration = 0.00
-                console.print()
-                console.print("[bold red]Selector not provided")
-                table = Table(show_header=False, box=None)
-                table.add_row("Result", result)
-                table.add_row("Duration", f"{duration:.2f} seconds")
-                console.print()
-                console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-                sys.exit(1)
+                handle_error("Selector not provided")
             if args.class_name is None and args.css_selector is None:
-                result = "Failed"
-                duration = 0.00
-                console.print()
-                console.print("[bold red]You must provide either --class or --selector for --element")
-                table = Table(show_header=False, box=None)
-                table.add_row("Result", result)
-                table.add_row("Duration", f"{duration:.2f} seconds")
-                console.print()
-                console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-                sys.exit(1)
+                handle_error("You must provide either --class or --selector for --element")
             if args.class_name:
                 result, output_path, duration = capture_element_template(args.url, args.class_name, args.name, selector_type=By.CLASS_NAME, driver=driver, should_quit=False)
             elif args.css_selector:
                 result, output_path, duration = capture_element_template(args.url, args.css_selector, args.name, selector_type=By.CSS_SELECTOR, driver=driver, should_quit=False)
         else:
             # Consistent error output for missing --page/--element
-            result = "Failed"
-            duration = 0.00
-            console.print()
-            console.print("[bold red]The --page or --element arg was not provided")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", result)
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            sys.exit(1)
+            handle_error("The --page or --element arg was not provided")
     finally:
         driver.quit()
     table = Table(show_header=False, box=None)

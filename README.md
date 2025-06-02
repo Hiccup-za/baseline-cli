@@ -32,6 +32,15 @@
 > deactivate
 > ```
 
+### Version Information
+
+Check the current version of baseline-cli:
+
+```sh
+python scripts/capture.py --version
+python scripts/compare.py --version
+```
+
 ## ✨ Features
 
 ### Capture a Baseline
@@ -118,6 +127,10 @@ pytest tests/
 
 Want to contribute?  
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project.
+
+## 📋 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and version releases.
 
 ## 📄 License
 
