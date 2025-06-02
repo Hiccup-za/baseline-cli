@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2024-12-30
+
+### Changed
+- **BREAKING**: Refactored to unified CLI architecture with subcommands
+- **BREAKING**: Changed from `python scripts/capture.py` to `python baseline.py capture`
+- **BREAKING**: Changed from `python scripts/compare.py` to `python baseline.py compare`
+- All arguments now use argparse validation with proper `required=True` flags
+- Improved help system with subcommand-specific help messages
+- Enhanced argument validation with mutually exclusive groups
+
+### Added
+- New unified `baseline.py` CLI entry point
+- Subcommand architecture: `capture` and `compare` commands
+- Comprehensive help system: `--help`, `capture --help`, `compare --help`
+- Better argument validation and error messages
+- Professional CLI structure similar to `git`, `docker`, etc.
+
+### Fixed
+- Restored comprehensive test coverage that was accidentally reduced
+- Fixed argument validation to use argparse properly
+- Enhanced error handling for missing required arguments
+- Improved mutually exclusive argument handling
+
+### Migration Guide
+- **Old**: `python scripts/capture.py --url <URL> --name <NAME> --page`
+- **New**: `python baseline.py capture --url <URL> --name <NAME> --page`
+- **Old**: `python scripts/compare.py --url <URL> --name <NAME>`
+- **New**: `python baseline.py compare --url <URL> --name <NAME>`
+
+### Technical Details
+- Single version number now applies to entire application, not individual scripts
+- Centralized command handling in `baseline.py`
+- Preserved all original functionality while improving user experience
+- Enhanced test coverage for all edge cases and error conditions
+
 ## [0.0.2] - 2024-12-30
 
 ### Changed

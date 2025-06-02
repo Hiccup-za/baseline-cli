@@ -37,8 +37,7 @@
 Check the current version of baseline-cli:
 
 ```sh
-python scripts/capture.py --version
-python scripts/compare.py --version
+python baseline.py --version
 ```
 
 ## ✨ Features
@@ -53,13 +52,13 @@ You can capture a baseline of:
 #### Full Page
 
 ```sh
-python scripts/capture.py --url <URL> --name <name> --page
+python baseline.py capture --url <URL> --name <name> --page
 ```
 
 #### Element by CSS Selector
 
 ```sh
-python scripts/capture.py --url <URL> --name <name> --element --selector "<CSS_SELECTOR>"
+python baseline.py capture --url <URL> --name <name> --element --selector "<CSS_SELECTOR>"
 ```
 - `--element`: Capture a screenshot of a specific element
 - `--selector`: CSS selector for the element
@@ -67,15 +66,15 @@ python scripts/capture.py --url <URL> --name <name> --element --selector "<CSS_S
 #### Element by Class Name
 
 ```sh
-python scripts/capture.py --url <URL> --name <name> --element --class "<CLASS_NAME>"
+python baseline.py capture --url <URL> --name <name> --element --class "<CLASS_NAME>"
 ```
 - `--class`: Class name for the element
 
 **Examples:**
 
 ```sh
-python scripts/capture.py --url http://localhost:3000/ --name button --element --selector "button"
-python scripts/capture.py --url http://localhost:3000/ --name text-box --element --class "text-box"
+python baseline.py capture --url http://localhost:3000/ --name button --element --selector "button"
+python baseline.py capture --url http://localhost:3000/ --name text-box --element --class "text-box"
 ```
 
 ### Compare against a Baseline
@@ -88,26 +87,34 @@ You can compare:
 #### Full Page
 
 ```sh
-python scripts/compare.py --url <URL> --name <name> --page
+python baseline.py compare --url <URL> --name <name> --page
 ```
 
 #### Element by CSS Selector
 
 ```sh
-python scripts/compare.py --url <URL> --name <name> --element --selector "<CSS_SELECTOR>"
+python baseline.py compare --url <URL> --name <name> --element --selector "<CSS_SELECTOR>"
 ```
 
 #### Element by Class Name
 
 ```sh
-python scripts/compare.py --url <URL> --name <name> --element --class "<CLASS_NAME>"
+python baseline.py compare --url <URL> --name <name> --element --class "<CLASS_NAME>"
 ```
 
 **Examples:**
 
 ```sh
-python scripts/compare.py --url http://localhost:3000/ --name button --element --selector "button"
-python scripts/compare.py --url http://localhost:3000/ --name text-box --element --class "text-box"
+python baseline.py compare --url http://localhost:3000/ --name button --element --selector "button"
+python baseline.py compare --url http://localhost:3000/ --name text-box --element --class "text-box"
+```
+
+### Getting Help
+
+```sh
+python baseline.py --help                    # Show main help
+python baseline.py capture --help           # Show capture command help
+python baseline.py compare --help           # Show compare command help
 ```
 
 ## 🧪 Tests
