@@ -4,11 +4,9 @@ import os
 import pytest
 from config.config import TARGET_URL
 
-SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'baseline.py')
-
 def run_cli(args):
     result = subprocess.run(
-        [sys.executable, SCRIPT_PATH] + ['capture'] + args,
+        ['baseline', 'capture'] + args,
         capture_output=True,
         text=True
     )
