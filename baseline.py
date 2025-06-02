@@ -91,14 +91,15 @@ For more help on a specific command:
     
     # Import and execute the appropriate command
     if args.command == 'capture':
-        from scripts.capture import capture_full_page_baseline, capture_element_template, handle_error
+        from scripts.capture import capture_full_page_baseline, capture_element_template
         from utils.web_utils import create_driver
+        from utils.error_utils import handle_cli_error, display_success_summary
         from config.config import HEADLESS, BASELINE_DIR
         from selenium.webdriver.common.by import By
         
         # Validate element-specific arguments
         if args.element and not args.class_name and not args.css_selector:
-            handle_error("You must provide either --class or --selector for --element")
+            handle_cli_error("You must provide either --class or --selector for --element", operation_type="capture")
         
         os.makedirs(BASELINE_DIR, exist_ok=True)
         driver = create_driver(headless=HEADLESS)
@@ -114,22 +115,16 @@ For more help on a specific command:
         finally:
             driver.quit()
             
-        # Display results
-        from rich.table import Table
-        from rich.panel import Panel
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", result)
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Capture Summary", expand=False))
+        # Display results using consolidated success summary
+        display_success_summary(result, duration, operation_type="capture")
     
     elif args.command == 'compare':
         from scripts.compare import compare_website_visuals
+        from utils.error_utils import handle_cli_error, display_success_summary
         
         # Validate element-specific arguments
         if args.element and not args.class_name and not args.css_selector:
-            console.print(f"\n[bold red]You must provide either --class or --selector for --element")
-            return
+            handle_cli_error("You must provide either --class or --selector for --element", operation_type="compare")
         
         # Execute comparison
         if args.element:
@@ -145,16 +140,8 @@ For more help on a specific command:
                 compare_element=False
             )
         
-        # Display results
-        from rich.table import Table
-        from rich.panel import Panel
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", result)
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        if similarity_score is not None:
-            table.add_row("Similarity Score", f"{similarity_score * 100:.2f}%")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+        # Display results using consolidated success summary
+        display_success_summary(result, duration, similarity_score, operation_type="compare")
 
 if __name__ == "__main__":
     main() 

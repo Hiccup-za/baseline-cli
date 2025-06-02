@@ -10,36 +10,16 @@ import argparse
 from PIL import Image
 from selenium.webdriver.common.by import By
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 
 # Add project root to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.web_utils import create_driver, take_screenshot
+from utils.error_utils import handle_cli_error, display_success_summary
 from config.config import TARGET_URL, BASELINE_DIR, HEADLESS
 from __version__ import __version__, __title__, __description__
 
 console = Console()
-
-def handle_error(message, title="Baseline Capture Summary"):
-    """
-    Handle errors consistently with standardized output format.
-    
-    Args:
-        message (str): Error message to display
-        title (str): Title for the summary panel
-    """
-    result = "Failed"
-    duration = 0.00
-    console.print()
-    console.print(f"[bold red]{message}")
-    table = Table(show_header=False, box=None)
-    table.add_row("Result", result)
-    table.add_row("Duration", f"{duration:.2f} seconds")
-    console.print()
-    console.print(Panel(table, title=title, expand=False))
-    sys.exit(1)
 
 def capture_full_page_baseline(url, name, driver=None, should_quit=True):
     """
@@ -170,19 +150,19 @@ def main():
     
     os.makedirs(BASELINE_DIR, exist_ok=True)
 
-    # Custom error handling for --name and --url
+    # Validate required arguments using consolidated error handling
     if '--name' in sys.argv and args.name is None:
-        handle_error("Baseline name not provided")
+        handle_cli_error("Baseline name not provided", operation_type="capture")
     if '--name' not in sys.argv:
-        handle_error("The --name arg was not provided")
+        handle_cli_error("The --name arg was not provided", operation_type="capture")
     if '--url' in sys.argv and (args.url is None or args.url.startswith('--')):
-        handle_error("URL not provided")
+        handle_cli_error("URL not provided", operation_type="capture")
     if '--url' not in sys.argv:
-        handle_error("The --url arg was not provided")
+        handle_cli_error("The --url arg was not provided", operation_type="capture")
 
     if args.page and args.element:
-        console.print("[bold red]Please choose either --page or --element, not both.")
-        sys.exit(1)
+        handle_cli_error("Please choose either --page or --element, not both.", operation_type="capture")
+    
     driver = create_driver(headless=HEADLESS)
     try:
         if args.page:
@@ -190,25 +170,23 @@ def main():
         elif args.element:
             # Support --class or --selector for element selection
             if args.class_name == '':
-                handle_error("Class not provided")
+                handle_cli_error("Class not provided", operation_type="capture")
             if args.css_selector == '':
-                handle_error("Selector not provided")
+                handle_cli_error("Selector not provided", operation_type="capture")
             if args.class_name is None and args.css_selector is None:
-                handle_error("You must provide either --class or --selector for --element")
+                handle_cli_error("You must provide either --class or --selector for --element", operation_type="capture")
             if args.class_name:
                 result, output_path, duration = capture_element_template(args.url, args.class_name, args.name, selector_type=By.CLASS_NAME, driver=driver, should_quit=False)
             elif args.css_selector:
                 result, output_path, duration = capture_element_template(args.url, args.css_selector, args.name, selector_type=By.CSS_SELECTOR, driver=driver, should_quit=False)
         else:
             # Consistent error output for missing --page/--element
-            handle_error("The --page or --element arg was not provided")
+            handle_cli_error("The --page or --element arg was not provided", operation_type="capture")
     finally:
         driver.quit()
-    table = Table(show_header=False, box=None)
-    table.add_row("Result", result)
-    table.add_row("Duration", f"{duration:.2f} seconds")
-    console.print()
-    console.print(Panel(table, title="Baseline Capture Summary", expand=False))
+    
+    # Display results using consolidated success summary
+    display_success_summary(result, duration, operation_type="capture")
 
 
 if __name__ == "__main__":

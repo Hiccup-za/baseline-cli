@@ -13,8 +13,6 @@ import time
 import cv2
 import numpy as np
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 from PIL import Image
 from selenium.webdriver.common.by import By
 
@@ -23,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.web_utils import take_screenshot, wait_for_page_load_complete, create_driver
 from utils.image_utils import compare_images
+from utils.error_utils import handle_cli_error, handle_multiple_cli_errors, format_function_error, display_success_summary
 from config.config import (
     BASELINE_DIR, 
     RESULTS_DIR, 
@@ -66,9 +65,7 @@ def compare_website_visuals(url, baseline_name, compare_element=False, class_nam
         baseline_path = os.path.join(BASELINE_DIR, f"{baseline_name}_baseline.png")
     if not os.path.exists(baseline_path):
         duration = time.time() - start_time
-        error_msg = f"Image not found"
-        console.print(f"\n[bold red]{error_msg}")
-        return "Failed", None, duration
+        return format_function_error("Image not found", duration)
     try:
         # Ensure the results and diff directories exist
         os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -161,103 +158,42 @@ def main():
         url_index = sys.argv.index('--url')
         # If --url is last or next value is another flag or missing
         if url_index == len(sys.argv) - 1 or (url_index + 1 < len(sys.argv) and sys.argv[url_index + 1].startswith('--')):
-            error_msg = "URL not provided"
-            duration = 0.0
-            console.print(f"\n[bold red]{error_msg}")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", "Failed")
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            return
+            handle_cli_error("URL not provided", operation_type="compare")
 
     # If neither --url nor --name are provided, show both errors
     if not args.url and not args.name:
-        duration = 0.0
-        console.print(f"\n[bold red]The --url arg was not provided")
-        console.print(f"[bold red]The --name arg was not provided")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", "Failed")
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        return
+        handle_multiple_cli_errors([
+            "The --url arg was not provided",
+            "The --name arg was not provided"
+        ], operation_type="compare")
 
     if not args.url:
-        error_msg = "The --url arg was not provided"
-        duration = 0.0
-        console.print(f"\n[bold red]{error_msg}")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", "Failed")
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        return
+        handle_cli_error("The --url arg was not provided", operation_type="compare")
+    
     # Check for --name provided but no value
     if '--name' in sys.argv:
         name_index = sys.argv.index('--name')
         # If --name is last or next value is another flag or missing
         if name_index == len(sys.argv) - 1 or (name_index + 1 < len(sys.argv) and sys.argv[name_index + 1].startswith('--')):
-            error_msg = "Image name not provided"
-            duration = 0.0
-            console.print(f"\n[bold red]{error_msg}")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", "Failed")
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            return
+            handle_cli_error("Image name not provided", operation_type="compare")
 
     if not args.name:
-        error_msg = "The --name arg was not provided"
-        duration = 0.0
-        console.print(f"\n[bold red]{error_msg}")
-        table = Table(show_header=False, box=None)
-        table.add_row("Result", "Failed")
-        table.add_row("Duration", f"{duration:.2f} seconds")
-        console.print()
-        console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-        return
+        handle_cli_error("The --name arg was not provided", operation_type="compare")
 
     # If --element is used, require --class or --selector
     if args.element:
         if not args.class_name and not args.css_selector:
-            duration = 0.0
-            console.print(f"\n[bold red]You must provide either --class or --selector for --element")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", "Failed")
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            return
+            handle_cli_error("You must provide either --class or --selector for --element", operation_type="compare")
         if args.class_name == 'class':
-            duration = 0.0
-            console.print(f"\n[bold red]No class name provided")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", "Failed")
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            return
+            handle_cli_error("No class name provided", operation_type="compare")
         if args.css_selector == 'selector':
-            duration = 0.0
-            console.print(f"\n[bold red]No CSS selector provided")
-            table = Table(show_header=False, box=None)
-            table.add_row("Result", "Failed")
-            table.add_row("Duration", f"{duration:.2f} seconds")
-            console.print()
-            console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
-            return
+            handle_cli_error("No CSS selector provided", operation_type="compare")
         result, similarity_score, duration = compare_website_visuals(args.url, args.name, compare_element=True, class_name=args.class_name, css_selector=args.css_selector)
     else:
         result, similarity_score, duration = compare_website_visuals(args.url, args.name, compare_element=False)
-    table = Table(show_header=False, box=None)
-    table.add_row("Result", result)
-    table.add_row("Duration", f"{duration:.2f} seconds")
-    if similarity_score is not None:
-        table.add_row("Similarity Score", f"{similarity_score * 100:.2f}%")
-    console.print()
-    console.print(Panel(table, title="Baseline Comparison Summary", expand=False))
+    
+    # Display results using consolidated success summary
+    display_success_summary(result, duration, similarity_score, operation_type="compare")
 
 if __name__ == "__main__":
     main() 
