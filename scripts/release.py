@@ -2,14 +2,18 @@
 """
 Release helper script for baseline-cli
 
-This script helps automate the release process by:
+This script helps prepare releases by:
 1. Updating the version in __version__.py
-2. Checking that CHANGELOG.md has an entry for the new version
-3. Creating and pushing a git tag to trigger the release workflow
+2. Checking that CHANGELOG.md has an entry for the new version  
+3. Committing the version change
+4. Optionally creating and pushing a git tag (automated workflow handles this too)
+
+The automated GitHub workflow will trigger when __version__.py changes on main.
 
 Usage:
-    python scripts/release.py 0.1.3          # Create release v0.1.3
-    python scripts/release.py 0.1.3 --dry-run  # Preview what would happen
+    python scripts/release.py 0.2.0          # Prepare release v0.2.0
+    python scripts/release.py 0.2.0 --dry-run  # Preview what would happen
+    python scripts/release.py 0.2.0 --commit-only  # Just update version and commit (recommended)
 """
 
 import argparse
@@ -121,8 +125,23 @@ def check_git_status():
     else:
         return True, "Working directory is clean"
 
+def commit_version_change(version, dry_run=False):
+    """Commit the version change"""
+    if dry_run:
+        if console:
+            console.print(f"[yellow]📝 Would commit version change to {version}[/yellow]")
+        else:
+            print(f"📝 Would commit version change to {version}")
+        return True
+    
+    commit_msg = f"Bump version to {version}"
+    if not run_command(f'git add __version__.py && git commit -m "{commit_msg}"', capture=False):
+        return False
+    
+    return True
+
 def create_and_push_tag(version, dry_run=False):
-    """Create and push a git tag"""
+    """Create and push a git tag (optional with automated workflow)"""
     tag = f"v{version}"
     
     if dry_run:
@@ -146,10 +165,12 @@ def create_and_push_tag(version, dry_run=False):
     return True
 
 def main():
-    parser = argparse.ArgumentParser(description="Create a new release of baseline-cli")
-    parser.add_argument("version", help="Version number (e.g., 0.1.3)")
+    parser = argparse.ArgumentParser(description="Prepare a new release of baseline-cli")
+    parser.add_argument("version", help="Version number (e.g., 0.2.0)")
     parser.add_argument("--dry-run", action="store_true", 
                        help="Preview what would happen without making changes")
+    parser.add_argument("--commit-only", action="store_true",
+                       help="Only update version and commit (recommended - let GitHub Actions handle the rest)")
     
     args = parser.parse_args()
     
@@ -159,9 +180,11 @@ def main():
     os.chdir(repo_root)
     
     if console:
+        mode = "DRY RUN" if args.dry_run else ("COMMIT ONLY" if args.commit_only else "FULL RELEASE")
         console.print(Panel.fit(f"🚀 [bold]baseline-cli Release Helper[/bold]", 
                                style="blue"))
     else:
+        mode = "DRY RUN" if args.dry_run else ("COMMIT ONLY" if args.commit_only else "FULL RELEASE")
         print("🚀 baseline-cli Release Helper")
         print("=" * 50)
     
@@ -188,14 +211,14 @@ def main():
         table = Table(show_header=False, box=None)
         table.add_row("Current Version", current_version)
         table.add_row("New Version", args.version)
-        table.add_row("Mode", "DRY RUN" if args.dry_run else "LIVE")
+        table.add_row("Mode", mode)
         console.print()
         console.print(table)
         console.print()
     else:
         print(f"Current Version: {current_version}")
         print(f"New Version: {args.version}")
-        print(f"Mode: {'DRY RUN' if args.dry_run else 'LIVE'}")
+        print(f"Mode: {mode}")
         print()
     
     # Pre-flight checks
@@ -251,32 +274,31 @@ def main():
             sys.exit(1)
     
     # Commit the version change
-    if not args.dry_run:
-        commit_msg = f"Bump version to {args.version}"
-        if not run_command(f'git add __version__.py && git commit -m "{commit_msg}"', capture=False):
-            if console:
-                console.print("[red]❌ Failed to commit version change[/red]")
-            else:
-                print("❌ Failed to commit version change")
-            sys.exit(1)
-        
+    if commit_version_change(args.version, args.dry_run):
         if console:
-            console.print("[green]✅ Committed version change[/green]")
+            console.print(f"[green]✅ {'Would commit' if args.dry_run else 'Committed'} version change[/green]")
         else:
-            print("✅ Committed version change")
-    
-    # Create and push tag
-    if create_and_push_tag(args.version, args.dry_run):
-        if console:
-            console.print(f"[green]✅ {'Would create and push' if args.dry_run else 'Created and pushed'} tag v{args.version}[/green]")
-        else:
-            print(f"✅ {'Would create and push' if args.dry_run else 'Created and pushed'} tag v{args.version}")
+            print(f"✅ {'Would commit' if args.dry_run else 'Committed'} version change")
     else:
         if console:
-            console.print("[red]❌ Failed to create/push tag[/red]")
+            console.print("[red]❌ Failed to commit version change[/red]")
         else:
-            print("❌ Failed to create/push tag")
+            print("❌ Failed to commit version change")
         sys.exit(1)
+    
+    # Handle tagging (optional in automated workflow)
+    if not args.commit_only:
+        if create_and_push_tag(args.version, args.dry_run):
+            if console:
+                console.print(f"[green]✅ {'Would create and push' if args.dry_run else 'Created and pushed'} tag v{args.version}[/green]")
+            else:
+                print(f"✅ {'Would create and push' if args.dry_run else 'Created and pushed'} tag v{args.version}")
+        else:
+            if console:
+                console.print("[red]❌ Failed to create/push tag[/red]")
+            else:
+                print("❌ Failed to create/push tag")
+            sys.exit(1)
     
     # Final instructions
     if console:
@@ -284,7 +306,17 @@ def main():
         if args.dry_run:
             console.print(Panel.fit(
                 "[bold green]✅ Dry run completed successfully![/bold green]\n"
-                f"Run without --dry-run to create release v{args.version}",
+                f"Run without --dry-run to prepare release v{args.version}",
+                style="green"
+            ))
+        elif args.commit_only:
+            console.print(Panel.fit(
+                f"[bold green]🎉 Release v{args.version} prepared![/bold green]\n"
+                "Push to main branch and GitHub Actions will automatically:\n"
+                "• Create the git tag\n"
+                "• Create the GitHub Release\n" 
+                "• Extract changelog content\n"
+                "• Upload release assets",
                 style="green"
             ))
         else:
@@ -298,7 +330,10 @@ def main():
         print()
         if args.dry_run:
             print("✅ Dry run completed successfully!")
-            print(f"Run without --dry-run to create release v{args.version}")
+            print(f"Run without --dry-run to prepare release v{args.version}")
+        elif args.commit_only:
+            print(f"🎉 Release v{args.version} prepared!")
+            print("Push to main and GitHub Actions will handle the rest")
         else:
             print(f"🎉 Release v{args.version} initiated!")
             print("Check GitHub Actions for release workflow progress")
