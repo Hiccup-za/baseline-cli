@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-12-30
+
+### Added
+- Added `.github/CODEOWNERS` file to require code review for all pull requests
+- All PRs now require approval from @Hiccup-za before merging
+
+### Security
+- Enhanced repository security by enforcing mandatory code reviews
+
 ## [0.1.0] - 2024-12-30
 
 ### Changed
