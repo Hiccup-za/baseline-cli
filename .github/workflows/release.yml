@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - '__version__.py'  # Only trigger when version file changes
-  push:
     tags:
       - 'v*'  # Also keep tag-based releases for manual control
 
