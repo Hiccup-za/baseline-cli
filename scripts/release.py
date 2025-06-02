@@ -236,22 +236,36 @@ def main():
             print("⚠️  No changelog entry found. Consider updating CHANGELOG.md")
     
     # Update version file
-    if args.dry_run:
-        if console:
-            console.print(f"[yellow]📝 Would update __version__.py to {args.version}[/yellow]")
-        else:
-            print(f"📝 Would update __version__.py to {args.version}")
-    else:
-        if update_version_file(args.version):
-            if console:
-                console.print(f"[green]✅ Updated __version__.py to {args.version}[/green]")
-            else:
-                print(f"✅ Updated __version__.py to {args.version}")
-        else:
-            sys.exit(1)
+    version_needs_update = current_version != args.version
     
-    # Commit the version change
-    if not args.dry_run:
+    if args.dry_run:
+        if version_needs_update:
+            if console:
+                console.print(f"[yellow]📝 Would update __version__.py from {current_version} to {args.version}[/yellow]")
+            else:
+                print(f"📝 Would update __version__.py from {current_version} to {args.version}")
+        else:
+            if console:
+                console.print(f"[yellow]📝 Version is already {args.version}, no update needed[/yellow]")
+            else:
+                print(f"📝 Version is already {args.version}, no update needed")
+    else:
+        if version_needs_update:
+            if update_version_file(args.version):
+                if console:
+                    console.print(f"[green]✅ Updated __version__.py from {current_version} to {args.version}[/green]")
+                else:
+                    print(f"✅ Updated __version__.py from {current_version} to {args.version}")
+            else:
+                sys.exit(1)
+        else:
+            if console:
+                console.print(f"[green]✅ Version is already {args.version}, no update needed[/green]")
+            else:
+                print(f"✅ Version is already {args.version}, no update needed")
+    
+    # Commit the version change (only if there was an update)
+    if not args.dry_run and version_needs_update:
         commit_msg = f"Bump version to {args.version}"
         if not run_command(f'git add __version__.py && git commit -m "{commit_msg}"', capture=False):
             if console:
@@ -264,6 +278,11 @@ def main():
             console.print("[green]✅ Committed version change[/green]")
         else:
             print("✅ Committed version change")
+    elif not args.dry_run:
+        if console:
+            console.print("[green]✅ No version change to commit[/green]")
+        else:
+            print("✅ No version change to commit")
     
     # Create and push tag
     if create_and_push_tag(args.version, args.dry_run):
