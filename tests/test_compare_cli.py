@@ -4,11 +4,11 @@ import os
 import pytest
 from config.config import TARGET_URL
 
-SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'scripts', 'compare.py')
+SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '..', 'baseline.py')
 
 def run_cli(args):
     result = subprocess.run(
-        [sys.executable, SCRIPT_PATH] + args,
+        [sys.executable, SCRIPT_PATH] + ['compare'] + args,
         capture_output=True,
         text=True
     )
@@ -35,39 +35,58 @@ def test_baseline_success():
     assert "Duration" in output
     assert "Similarity Score" in output and "100.00%" in output
 
+def test_baseline_with_page_flag():
+    # Test explicit --page flag (should be default anyway)
+    from config.config import BASELINE_DIR
+    baseline_path = os.path.join(BASELINE_DIR, "login_baseline.png")
+    if not os.path.exists(baseline_path):
+        pytest.skip("Baseline image does not exist.")
+    result = run_cli(['--url', TARGET_URL, '--name', 'login', '--page'])
+    output = result.stdout
+    assert "Baseline Comparison Summary" in output
+
 def test_baseline_image_not_found():
     result = run_cli(['--url', TARGET_URL, '--name', 'nonexistent'])
     assert "Image not found" in result.stdout
     assert "Result" in result.stdout and "Failed" in result.stdout 
     assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
 
-def test_baseline_image_not_provided():
-    result = run_cli(['--url', TARGET_URL, '--name'])
-    assert "Image name not provided" in result.stdout
-    assert "Result" in result.stdout and "Failed" in result.stdout 
-    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
+def test_element_missing_selector_and_class():
+    # Test --element without --selector or --class
+    result = run_cli(['--url', TARGET_URL, '--name', 'login', '--element'])
+    # Should show error message about requiring --class or --selector
+    assert "You must provide either --class or --selector for --element" in result.stdout
 
-def test_baseline_image_arg_not_provided():
-    result = run_cli(['--url', TARGET_URL])
-    assert "The --name arg was not provided" in result.stdout
-    assert "Result" in result.stdout and "Failed" in result.stdout 
-    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
+def test_element_with_both_selector_and_class():
+    # Test --element with both --selector and --class (should be mutually exclusive)
+    result = run_cli(['--url', TARGET_URL, '--name', 'login', '--element', '--selector', 'img', '--class', 'some-class'])
+    assert result.returncode == 2  # argparse error code
+    assert "not allowed" in result.stderr or "mutually exclusive" in result.stderr
 
-def test_baseline_url_not_provided():
-    result = run_cli(['--url', '--name', 'login'])
-    assert "URL not provided" in result.stdout
-    assert "Result" in result.stdout and "Failed" in result.stdout 
-    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
-
-def test_baseline_url_arg_not_provided():
+def test_missing_url_argument():
+    # Test missing --url argument entirely
     result = run_cli(['--name', 'login'])
-    assert "The --url arg was not provided" in result.stdout
-    assert "Result" in result.stdout and "Failed" in result.stdout 
-    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
+    assert result.returncode == 2  # argparse error code
+    assert "required" in result.stderr and "--url" in result.stderr
 
-def test_baseline_args_not_provided():
-    result = run_cli([])
-    assert "The --url arg was not provided" in result.stdout
-    assert "The --name arg was not provided" in result.stdout
-    assert "Result" in result.stdout and "Failed" in result.stdout 
-    assert "Duration" in result.stdout and "0.00 seconds" in result.stdout 
+def test_missing_name_argument():
+    # Test missing --name argument entirely
+    result = run_cli(['--url', TARGET_URL])
+    assert result.returncode == 2  # argparse error code
+    assert "required" in result.stderr and "--name" in result.stderr
+
+def test_both_page_and_element_provided():
+    # Test providing both --page and --element (should be mutually exclusive)
+    result = run_cli(['--url', TARGET_URL, '--name', 'login', '--page', '--element', '--selector', 'img'])
+    assert result.returncode == 2  # argparse error code
+    assert "not allowed" in result.stderr or "mutually exclusive" in result.stderr
+
+def test_help_message():
+    # Test that help works for compare command
+    result = run_cli(['--help'])
+    assert result.returncode == 0
+    assert "Compare current screenshots against baseline images" in result.stdout
+    assert "--url" in result.stdout
+    assert "--name" in result.stdout
+    assert "--page" in result.stdout
+    assert "--element" in result.stdout
