@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Installation Guide**: Streamlined installation process with proper Python packaging
 - **User Experience**: Significantly improved CLI professionalism and ease of use
 - **Test Suite**: Updated all CLI tests to use the new `baseline` command instead of `python baseline.py`
+- **CI Workflow**: Updated GitHub Actions workflow to install package with `pip install -e .` instead of just dependencies
 
 ### Removed
 - **Legacy Method Documentation**: Removed all references to old `python baseline.py` usage patterns to avoid confusion
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maintained backward compatibility for existing installations
 - Refactored test suite to use `subprocess.run(['baseline', 'capture'])` instead of `[sys.executable, SCRIPT_PATH]`
 - Enhanced test resilience for element tests to handle cases where elements don't exist on test pages
+- Updated CI to install full package ensuring `baseline` command is available during test execution
 
 ### Migration
 - **Recommended**: Install with `pip install -e .` and use `baseline` command
