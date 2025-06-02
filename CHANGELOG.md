@@ -7,7 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.2] - 2025-01-29
+## [0.3.0] - 2025-06-03
+
+### Added
+- **Professional CLI Command**: Users can now use `baseline` instead of `python baseline.py` for a more professional experience
+- **Proper Python Package Setup**: Created `setup.py` with entry points for system-wide installation
+- **Multiple Installation Methods**: Added development (`pip install -e .`) and direct installation options
+- **Package Distribution Support**: Added `MANIFEST.in` for proper package distribution
+
+### Changed
+- **Documentation Overhaul**: Updated all documentation to use the professional `baseline` command
+- **Installation Guide**: Streamlined installation process with proper Python packaging
+- **User Experience**: Significantly improved CLI professionalism and ease of use
+- **Test Suite**: Updated all CLI tests to use the new `baseline` command instead of `python baseline.py`
+- **CI Workflow**: Updated GitHub Actions workflow to install package with `pip install -e .` instead of just dependencies
+
+### Removed
+- **Legacy Method Documentation**: Removed all references to old `python baseline.py` usage patterns to avoid confusion
+- **Outdated Installation Steps**: Cleaned up legacy installation methods in favor of modern packaging
+
+### Technical Details
+- Added console script entry point: `baseline=baseline:main`
+- Enhanced `setup.py` with comprehensive metadata and dependencies
+- Updated help examples to show modern command structure
+- Maintained backward compatibility for existing installations
+- Refactored test suite to use `subprocess.run(['baseline', 'capture'])` instead of `[sys.executable, SCRIPT_PATH]`
+- Enhanced test resilience for element tests to handle cases where elements don't exist on test pages
+- Updated CI to install full package ensuring `baseline` command is available during test execution
+
+### Migration
+- **Recommended**: Install with `pip install -e .` and use `baseline` command
+- **Commands**: `baseline --help`, `baseline capture --url ...`, `baseline compare --url ...`
+- **Benefits**: Cleaner command structure, system-wide availability, professional appearance
+
+## [0.2.2] - 2025-06-02
 
 ### Removed
 - **Release Automation Files**: Removed `RELEASE.md` and `scripts/release.py` to simplify the project structure
