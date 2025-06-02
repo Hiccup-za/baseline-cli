@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-01-29
+
+### Removed
+- **Release Automation Files**: Removed `RELEASE.md` and `scripts/release.py` to simplify the project structure
+- **Automated Release System**: Streamlined codebase by removing GitHub Actions release automation scripts
+- **Release Helper Script**: Removed `scripts/release.py` utility for automated version bumping and release creation
+
+### Simplified
+- **Project Structure**: Reduced complexity by removing automated release workflow components
+- **Maintenance Overhead**: Eliminated need to maintain complex release automation infrastructure
+- **Documentation**: Removed extensive release process documentation in favor of simpler manual releases
+
+### Technical Details
+- Deleted `RELEASE.md` containing release process documentation (245 lines)
+- Deleted `scripts/release.py` release helper script (326 lines)
+- Simplified project maintenance by removing ~571 lines of release automation code
+- Manual releases can still be created through standard git tagging and GitHub interface
+
 ## [0.2.1] - 2025-06-02
 
 ### Improved
